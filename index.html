@@ -4,15 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FootballWorld</title>
-
-  <!-- PWA Manifest in HTML eingebaut -->
+  <!-- PWA Manifest -->
   <link rel="manifest" href="#manifest" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="FootballWorld" />
   <link rel="apple-touch-icon" href="icons/icon-192x192.png" />
-
-  <!-- PWA Manifest als eingebetteten JSON -->
   <script type="application/json" id="manifest">
     {
       "name": "FootballWorld",
@@ -37,152 +34,41 @@
     }
   </script>
 
-  <!-- Style (OneFootball Look) -->
   <style>
-    :root {
-      --green: #00ff5f;
-      --dark: #121212;
-      --card: #1e1e1e;
-      --text: #ffffff;
-      --secondary: #aaaaaa;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
     body {
       font-family: 'Segoe UI', sans-serif;
-      background-color: var(--dark);
-      color: var(--text);
+      background-color: #121212;
+      color: white;
       line-height: 1.5;
     }
-
-    header {
-      background-color: var(--card);
-      padding: 1.2rem;
-      text-align: center;
-      border-bottom: 1px solid #333;
+    h1, h2 {
+      color: #00ff5f;
     }
-
-    header h1 {
-      color: var(--green);
-      font-size: 1.8rem;
-    }
-
-    select {
-      margin-top: 1rem;
-      padding: 0.6rem;
-      border-radius: 8px;
-      border: none;
-      background-color: #2c2c2c;
-      color: var(--text);
-      font-size: 1rem;
-    }
-
-    main {
-      padding: 1rem;
-    }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 1rem;
-      color: var(--secondary);
-    }
-
     .match {
-      background-color: var(--card);
+      background-color: #1e1e1e;
       padding: 1rem;
-      margin-bottom: 1rem;
+      margin: 1rem 0;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      transition: transform 0.2s ease;
     }
-
-    .match:hover {
-      transform: scale(1.02);
-    }
-
-    .teams {
-      display: flex;
-      justify-content: space-between;
-      font-size: 1.1rem;
-      font-weight: bold;
-      margin-bottom: 0.5rem;
-    }
-
-    .date {
-      color: var(--secondary);
-      font-size: 0.95rem;
-      text-align: right;
-    }
-
-    .error {
-      text-align: center;
-      color: red;
-      padding: 1rem;
-    }
-
-    /* Footer Navigation */
     footer {
       position: fixed;
       bottom: 0;
       width: 100%;
-      background-color: var(--card);
-      padding: 0.8rem;
+      background-color: #1e1e1e;
       display: flex;
       justify-content: space-around;
-      align-items: center;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+      padding: 0.8rem;
     }
-
     footer button {
-      background-color: var(--green);
-      color: var(--text);
+      background-color: #00ff5f;
+      color: white;
       border: none;
       padding: 0.5rem;
       border-radius: 8px;
-      font-size: 1rem;
       cursor: pointer;
     }
-
     footer button:hover {
-      background-color: #00e650;
-    }
-
-    .form-container {
-      padding: 2rem;
-      text-align: center;
-      background-color: var(--card);
-      border-radius: 8px;
-      margin-top: 2rem;
-    }
-
-    input[type="email"], input[type="password"] {
-      width: 80%;
-      padding: 0.8rem;
-      margin: 0.5rem 0;
-      border-radius: 8px;
-      border: none;
-      background-color: #333;
-      color: var(--text);
-    }
-
-    input[type="submit"] {
-      width: 80%;
-      padding: 0.8rem;
-      margin-top: 1rem;
-      background-color: var(--green);
-      border: none;
-      border-radius: 8px;
-      color: var(--text);
-      font-size: 1.1rem;
-      cursor: pointer;
-    }
-
-    input[type="submit"]:hover {
       background-color: #00e650;
     }
   </style>
@@ -190,6 +76,7 @@
 <body>
   <header>
     <h1>FootballWorld</h1>
+    <h2>Live Fußball Spiele</h2>
     <select id="leagueSelect">
       <option value="BL1">🇩🇪 Bundesliga</option>
       <option value="BL2">🇩🇪 2. Bundesliga</option>
@@ -197,117 +84,73 @@
     </select>
   </header>
 
-  <main id="content">
-    <h2>Kommende Spiele</h2>
-    <div id="matches">⏳ Lädt Spiele...</div>
+  <main id="matchesContainer">
+    <!-- Spiele werden hier dynamisch geladen -->
+    <div class="error" id="errorMessage"></div>
   </main>
 
   <footer>
-    <button onclick="showHomePage()">Startseite</button>
-    <button onclick="showFavorites()">Favoriten</button>
-    <button onclick="showUserProfile()">Dein FootballWorld</button>
+    <button id="homeBtn">Home</button>
+    <button id="favoritesBtn">Favoriten</button>
+    <button id="profileBtn">Dein FootballWorld</button>
   </footer>
 
   <script>
-    const API_KEY = '671be1f5c8ff4923a3c277b4104bd652'; // Dein API Key
-    const matchContainer = document.getElementById('matches');
-    const leagueSelect = document.getElementById('leagueSelect');
+    const apiKey = '671be1f5c8ff4923a3c277b4104bd652'; // Dein API-Key
+    const matchesContainer = document.getElementById('matchesContainer');
+    const errorMessage = document.getElementById('errorMessage');
 
-    leagueSelect.addEventListener('change', () => {
-      loadMatches(leagueSelect.value);
-    });
+    document.getElementById('leagueSelect').addEventListener('change', loadMatches);
 
-    function loadMatches(competitionCode = 'BL1') {
-      matchContainer.innerHTML = '⏳ Lädt Spiele...';
-      fetch(`https://api.football-data.org/v2/competitions/${competitionCode}/matches?status=SCHEDULED`, {
-        headers: { 'X-Auth-Token': API_KEY }
+    // Funktion zum Abrufen der Spiele von der API
+    function loadMatches() {
+      const league = document.getElementById('leagueSelect').value;
+      const url = `https://api.football-data.org/v4/matches?competitions=${league}`;
+      
+      fetch(url, {
+        method: 'GET',
+        headers: {
+          'X-Auth-Token': apiKey
+        }
       })
-        .then(response => {
-          if (!response.ok) throw new Error('API-Fehler');
-          return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-          matchContainer.innerHTML = '';
-          data.matches.slice(0, 10).forEach(match => {
-            const date = new Date(match.utcDate).toLocaleString("de-DE");
-            const html = `
-              <div class="match">
-                <div class="teams">
-                  <span>${match.homeTeam.name}</span>
-                  <span>${match.awayTeam.name}</span>
-                </div>
-                <div class="date">📅 ${date}</div>
-              </div>`;
-            matchContainer.innerHTML += html;
-          });
+          if (data.matches && data.matches.length > 0) {
+            displayMatches(data.matches);
+          } else {
+            errorMessage.textContent = 'Keine Spiele verfügbar.';
+          }
         })
-        .catch(err => {
-          console.error(err);
-          matchContainer.innerHTML = '<p class="error">❌ Fehler beim Laden der Spiele.</p>';
+        .catch(error => {
+          console.error('Fehler bei der API-Anfrage:', error);
+          errorMessage.textContent = 'Es gab einen Fehler beim Laden der Spiele.';
         });
     }
 
+    // Funktion zur Anzeige der geladenen Spiele
+    function displayMatches(matches) {
+      matchesContainer.innerHTML = ''; // Inhalt zurücksetzen
+
+      matches.forEach(match => {
+        const matchElement = document.createElement('div');
+        matchElement.classList.add('match');
+        
+        const date = new Date(match.utcDate);
+        const formattedDate = `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}`;
+        
+        matchElement.innerHTML = `
+          <div class="teams">
+            <span>${match.homeTeam.name}</span> vs <span>${match.awayTeam.name}</span>
+          </div>
+          <div class="date">${formattedDate}</div>
+        `;
+
+        matchesContainer.appendChild(matchElement);
+      });
+    }
+
+    // Zunächst Spiele laden
     loadMatches();
-
-    function showHomePage() {
-      document.getElementById('content').innerHTML = '<h2>Kommende Spiele</h2><div id="matches">⏳ Lädt Spiele...</div>';
-      loadMatches();
-    }
-
-    function showFavorites() {
-      document.getElementById('content').innerHTML = '<h2>Favoriten</h2><p>Hier kannst du deine Lieblingsmannschaften speichern.</p>';
-    }
-
-    function showUserProfile() {
-      document.getElementById('content').innerHTML = `
-        <h2>Dein FootballWorld</h2>
-        <button onclick="showLogin()">Anmelden</button>
-        <button onclick="showRegister()">Registrieren</button>
-      `;
-    }
-
-    function showLogin() {
-      document.getElementById('content').innerHTML = `
-        <div class="form-container">
-          <h3>Anmelden</h3>
-          <input type="email" id="loginEmail" placeholder="E-Mail" />
-          <input type="password" id="loginPassword" placeholder="Passwort" />
-          <input type="submit" value="Anmelden" onclick="handleLogin()" />
-        </div>
-      `;
-    }
-
-    function showRegister() {
-      document.getElementById('content').innerHTML = `
-        <div class="form-container">
-          <h3>Registrieren</h3>
-          <input type="email" id="registerEmail" placeholder="E-Mail" />
-          <input type="password" id="registerPassword" placeholder="Passwort" />
-          <input type="submit" value="Registrieren" onclick="handleRegister()" />
-        </div>
-      `;
-    }
-
-    function handleLogin() {
-      const email = document.getElementById('loginEmail').value;
-      const password = document.getElementById('loginPassword').value;
-      // Überprüfung im Code (Dummy-Daten)
-      if (email === "test@example.com" && password === "password123") {
-        alert("Erfolgreich angemeldet!");
-        showHomePage();
-      } else {
-        alert("Falsche E-Mail oder Passwort.");
-      }
-    }
-
-    function handleRegister() {
-      const email = document.getElementById('registerEmail').value;
-      const password = document.getElementById('registerPassword').value;
-      // Senden der Daten an die E-Mail-Adresse
-      window.location.href = `mailto:kontakt@bundesliga.hustensaft.org?subject=Neue Registrierung&body=Email: ${email}%0APasswort: ${password}`;
-      alert("Registrierung gesendet!");
-      showHomePage();
-    }
   </script>
 </body>
 </html>
