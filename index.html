@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FootballWorld</title>
+
+  <!-- iPhone Web App Support -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="FootballWorld" />
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/833/833314.png" />
+
+  <!-- Style (OneFootball Look) -->
+  <style>
+    :root {
+      --green: #00ff5f;
+      --dark: #121212;
+      --card: #1e1e1e;
+      --text: #ffffff;
+      --secondary: #aaaaaa;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--dark);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    header {
+      background-color: var(--card);
+      padding: 1.2rem;
+      text-align: center;
+      border-bottom: 1px solid #333;
+    }
+
+    header h1 {
+      color: var(--green);
+      font-size: 1.8rem;
+    }
+
+    select {
+      margin-top: 1rem;
+      padding: 0.6rem;
+      border-radius: 8px;
+      border: none;
+      background-color: #2c2c2c;
+      color: var(--text);
+      font-size: 1rem;
+    }
+
+    main {
+      padding: 1rem;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 1rem;
+      color: var(--secondary);
+    }
+
+    .match {
+      background-color: var(--card);
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transition: transform 0.2s ease;
+    }
+
+    .match:hover {
+      transform: scale(1.02);
+    }
+
+    .teams {
+      display: flex;
+      justify-content: space-between;
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+
+    .date {
+      color: var(--secondary);
+      font-size: 0.95rem;
+      text-align: right;
+    }
+
+    .error {
+      text-align: center;
+      color: red;
+      padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>FootballWorld</h1>
+    <select id="leagueSelect">
+      <option value="BL1">🇩🇪 Bundesliga</option>
+      <option value="BL2">🇩🇪 2. Bundesliga</option>
+      <option value="CL">🏆 Champions League</option>
+    </select>
+  </header>
+
+  <main>
+    <h2>Kommende Spiele</h2>
+    <div id="matches">⏳ Lädt Spiele...</div>
+  </main>
+
+  <script>
+    const API_KEY = '671be1f5c8ff4923a3c277b4104bd652'; // Dein Key
+    const matchContainer = document.getElementById('matches');
+    const leagueSelect = document.getElementById('leagueSelect');
+
+    leagueSelect.addEventListener('change', () => {
+      loadMatches(leagueSelect.value);
+    });
+
+    function loadMatches(competitionCode = 'BL1') {
+      matchContainer.innerHTML = '⏳ Lädt Spiele...';
+      fetch(`https://api.football-data.org/v2/competitions/${competitionCode}/matches?status=SCHEDULED`, {
+        headers: { 'X-Auth-Token': 671be1f5c8ff4923a3c277b4104bd652 }
+      })
+        .then(response => {
+          if (!response.ok) throw new Error('API-Fehler');
+          return response.json();
+        })
+        .then(data => {
+          matchContainer.innerHTML = '';
+          data.matches.slice(0, 10).forEach(match => {
+            const date = new Date(match.utcDate).toLocaleString("de-DE");
+            const html = `
+              <div class="match">
+                <div class="teams">
+                  <span>${match.homeTeam.name}</span>
+                  <span>${match.awayTeam.name}</span>
+                </div>
+                <div class="date">📅 ${date}</div>
+              </div>`;
+            matchContainer.innerHTML += html;
+          });
+        })
+        .catch(err => {
+          console.error(err);
+          matchContainer.innerHTML = '<p class="error">❌ Fehler beim Laden der Spiele.</p>';
+        });
+    }
+
+    loadMatches();
+  </script>
+</body>
+</html>
