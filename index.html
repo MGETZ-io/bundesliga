@@ -5,11 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FootballWorld</title>
 
-  <!-- iPhone Web App Support -->
+  <!-- PWA Manifest in HTML eingebaut -->
+  <link rel="manifest" href="#manifest" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="FootballWorld" />
-  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/833/833314.png" />
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png" />
+
+  <!-- PWA Manifest als eingebetteten JSON -->
+  <script type="application/json" id="manifest">
+    {
+      "name": "FootballWorld",
+      "short_name": "FootballWorld",
+      "description": "Deine Fußball App für Bundesliga, 2. Bundesliga und Champions League",
+      "start_url": ".",
+      "display": "standalone",
+      "background_color": "#121212",
+      "theme_color": "#00ff5f",
+      "icons": [
+        {
+          "src": "icons/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        },
+        {
+          "src": "icons/icon-512x512.png",
+          "sizes": "512x512",
+          "type": "image/png"
+        }
+      ]
+    }
+  </script>
 
   <!-- Style (OneFootball Look) -->
   <style>
@@ -98,6 +124,67 @@
       color: red;
       padding: 1rem;
     }
+
+    /* Footer Navigation */
+    footer {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background-color: var(--card);
+      padding: 0.8rem;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    footer button {
+      background-color: var(--green);
+      color: var(--text);
+      border: none;
+      padding: 0.5rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    footer button:hover {
+      background-color: #00e650;
+    }
+
+    .form-container {
+      padding: 2rem;
+      text-align: center;
+      background-color: var(--card);
+      border-radius: 8px;
+      margin-top: 2rem;
+    }
+
+    input[type="email"], input[type="password"] {
+      width: 80%;
+      padding: 0.8rem;
+      margin: 0.5rem 0;
+      border-radius: 8px;
+      border: none;
+      background-color: #333;
+      color: var(--text);
+    }
+
+    input[type="submit"] {
+      width: 80%;
+      padding: 0.8rem;
+      margin-top: 1rem;
+      background-color: var(--green);
+      border: none;
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+
+    input[type="submit"]:hover {
+      background-color: #00e650;
+    }
   </style>
 </head>
 <body>
@@ -110,13 +197,19 @@
     </select>
   </header>
 
-  <main>
+  <main id="content">
     <h2>Kommende Spiele</h2>
     <div id="matches">⏳ Lädt Spiele...</div>
   </main>
 
+  <footer>
+    <button onclick="showHomePage()">Startseite</button>
+    <button onclick="showFavorites()">Favoriten</button>
+    <button onclick="showUserProfile()">Dein FootballWorld</button>
+  </footer>
+
   <script>
-    const API_KEY = '671be1f5c8ff4923a3c277b4104bd652'; // Dein Key
+    const API_KEY = '671be1f5c8ff4923a3c277b4104bd652'; // Dein API Key
     const matchContainer = document.getElementById('matches');
     const leagueSelect = document.getElementById('leagueSelect');
 
@@ -127,7 +220,7 @@
     function loadMatches(competitionCode = 'BL1') {
       matchContainer.innerHTML = '⏳ Lädt Spiele...';
       fetch(`https://api.football-data.org/v2/competitions/${competitionCode}/matches?status=SCHEDULED`, {
-        headers: { 'X-Auth-Token': 671be1f5c8ff4923a3c277b4104bd652 }
+        headers: { 'X-Auth-Token': API_KEY }
       })
         .then(response => {
           if (!response.ok) throw new Error('API-Fehler');
@@ -155,6 +248,66 @@
     }
 
     loadMatches();
+
+    function showHomePage() {
+      document.getElementById('content').innerHTML = '<h2>Kommende Spiele</h2><div id="matches">⏳ Lädt Spiele...</div>';
+      loadMatches();
+    }
+
+    function showFavorites() {
+      document.getElementById('content').innerHTML = '<h2>Favoriten</h2><p>Hier kannst du deine Lieblingsmannschaften speichern.</p>';
+    }
+
+    function showUserProfile() {
+      document.getElementById('content').innerHTML = `
+        <h2>Dein FootballWorld</h2>
+        <button onclick="showLogin()">Anmelden</button>
+        <button onclick="showRegister()">Registrieren</button>
+      `;
+    }
+
+    function showLogin() {
+      document.getElementById('content').innerHTML = `
+        <div class="form-container">
+          <h3>Anmelden</h3>
+          <input type="email" id="loginEmail" placeholder="E-Mail" />
+          <input type="password" id="loginPassword" placeholder="Passwort" />
+          <input type="submit" value="Anmelden" onclick="handleLogin()" />
+        </div>
+      `;
+    }
+
+    function showRegister() {
+      document.getElementById('content').innerHTML = `
+        <div class="form-container">
+          <h3>Registrieren</h3>
+          <input type="email" id="registerEmail" placeholder="E-Mail" />
+          <input type="password" id="registerPassword" placeholder="Passwort" />
+          <input type="submit" value="Registrieren" onclick="handleRegister()" />
+        </div>
+      `;
+    }
+
+    function handleLogin() {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      // Überprüfung im Code (Dummy-Daten)
+      if (email === "test@example.com" && password === "password123") {
+        alert("Erfolgreich angemeldet!");
+        showHomePage();
+      } else {
+        alert("Falsche E-Mail oder Passwort.");
+      }
+    }
+
+    function handleRegister() {
+      const email = document.getElementById('registerEmail').value;
+      const password = document.getElementById('registerPassword').value;
+      // Senden der Daten an die E-Mail-Adresse
+      window.location.href = `mailto:kontakt@bundesliga.hustensaft.org?subject=Neue Registrierung&body=Email: ${email}%0APasswort: ${password}`;
+      alert("Registrierung gesendet!");
+      showHomePage();
+    }
   </script>
 </body>
 </html>
